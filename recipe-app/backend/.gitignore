@@ -1,0 +1,8 @@
+.env
+node_modules/
+.DS_Store
+ *.log
+ *.pyc
+ audio.mp4
+ audio.webm
+ launch.json
