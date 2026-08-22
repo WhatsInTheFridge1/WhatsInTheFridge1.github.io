@@ -28,7 +28,7 @@ function App() {
   const searchRecipes = async (query) => {
     setLoading(true);
     setSelectedVideo(null);
-    const response = await fetch(`http://localhost:5000/search?q=${query}`);
+    const response = await fetch(`https://whatsinthefridge2-github-io.onrender.com/search?q=${query}`);
     const data = await response.json();
     setVideos(data);
     setLoading(false);
