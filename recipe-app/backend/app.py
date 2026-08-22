@@ -85,8 +85,21 @@ def search_recipes():
     }
     response = requests.get(url, params=params)
     data = response.json()
-    
+
+    print("YouTube API status:", response.status_code)
+    print("YouTube API response:", data)
+
     videos = []
+    for item in data.get("items", []):
+        videos.append({
+            "id": item["id"]["videoId"],
+            "title": item["snippet"]["title"],
+            "thumbnail": item["snippet"]["thumbnails"]["high"]["url"],
+            "channel": item["snippet"]["channelTitle"],
+            "description": item["snippet"]["description"]
+        })
+    
+    return jsonify(videos)
     for item in data.get("items", []):
         videos.append({
             "id": item["id"]["videoId"],
