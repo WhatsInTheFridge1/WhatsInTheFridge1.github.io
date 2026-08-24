@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor
 import os
 import re
 import requests
@@ -71,6 +72,36 @@ def sanitize_ingredients(raw_text):
     return "\n".join(lines)
 
 
+def description_likely_has_ingredients(description):
+    """Cheap, description-only check used to filter search results.
+    Does not touch audio/Whisper, so a video can still pass full
+    extraction later even if this says no (it just won't show up in search).
+    """
+    if not description or not description.strip():
+        return False
+
+    prompt = f"""
+    Does this YouTube video description contain an actual list of cooking
+    ingredients (specific items and/or quantities), as opposed to just a
+    title, links, hashtags, or sponsor/subscribe messages?
+    Answer with exactly one word: YES or NO.
+
+    Description:
+    {description[:2000]}
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=3
+        )
+        return response.choices[0].message.content.strip().upper().startswith("YES")
+    except Exception:
+        # Don't let a transient API error hide a video from search.
+        return True
+
+
 # Search for recipe videos on YouTube
 @app.route("/search", methods=["GET"])
 def search_recipes():
@@ -86,27 +117,27 @@ def search_recipes():
     response = requests.get(url, params=params)
     data = response.json()
 
-   
-    videos = []
+    candidates = []
     for item in data.get("items", []):
-        videos.append({
+        candidates.append({
             "id": item["id"]["videoId"],
             "title": item["snippet"]["title"],
             "thumbnail": item["snippet"]["thumbnails"]["high"]["url"],
             "channel": item["snippet"]["channelTitle"],
             "description": item["snippet"]["description"]
         })
-    
-    return jsonify(videos)
-    for item in data.get("items", []):
-        videos.append({
-            "id": item["id"]["videoId"],
-            "title": item["snippet"]["title"],
-            "thumbnail": item["snippet"]["thumbnails"]["high"]["url"],
-            "channel": item["snippet"]["channelTitle"],
-            "description": item["snippet"]["description"]
-        })
-    
+
+    def keep(video):
+        cached = RESULT_CACHE.get(video["id"])
+        if cached is not None:
+            return "No ingredients could be confidently extracted" not in cached
+        return description_likely_has_ingredients(video["description"])
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        keep_flags = list(executor.map(keep, candidates))
+
+    videos = [video for video, keep_it in zip(candidates, keep_flags) if keep_it]
+
     return jsonify(videos)
 
 
