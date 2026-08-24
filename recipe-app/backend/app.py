@@ -111,7 +111,7 @@ def search_recipes():
         "part": "snippet",
         "q": f"{query} recipe",
         "type": "video",
-        "maxResults": 12,
+        "maxResults": 50,
         "key": YOUTUBE_API_KEY
     }
     response = requests.get(url, params=params)
