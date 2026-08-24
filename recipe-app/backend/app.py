@@ -134,16 +134,54 @@ def get_ingredients():
 
     description = data["items"][0]["snippet"]["description"]
 
+    transcript_text = ""
+    try:
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "outtmpl": "audio.%(ext)s",
+            "postprocessors": [{
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+            }],
+            "quiet": True
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([f"https://youtube.com/watch?v={video_id}"])
+
+        with open("audio.mp3", "rb") as audio_file:
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+        transcript_text = transcript.text[:12000]
+
+    except Exception:
+        transcript_text = ""
+    finally:
+        if os.path.exists("audio.mp3"):
+            os.remove("audio.mp3")
+
     prompt = f"""
-    Look at this YouTube video description and extract any ingredients listed.
-    If you find ingredients, return them as a clean numbered list with the full amount/quantity.
+    You are extracting the full ingredient list for a cooking video from two sources:
+    the video's YouTube description, and a transcript of the video's audio. Either
+    source may be incomplete, mention ingredients the other doesn't, or contain
+    unrelated text (links, sponsor messages, hashtags, etc).
+
+    Combine both sources into ONE clean, deduplicated numbered list of every distinct
+    ingredient mentioned, with the full amount/quantity when it's known.
     Format: "1. 2 cups flour", "2. 1/2 teaspoon salt", etc.
     Include units (cups, tablespoons, grams, etc.) and amounts for each ingredient.
-    If there are no ingredients in the description, just say "NO_INGREDIENTS_FOUND".
-    Do NOT include recipe names, categories, or section titles unless they are actual ingredients.
+    If the same ingredient appears in both sources, list it once using the most
+    specific quantity available.
+    Do NOT include recipe names, categories, section titles, or non-ingredient items
+    (links, sponsors, hashtags, calls to subscribe, etc).
+    If neither source mentions any ingredients, just say "NO_INGREDIENTS_FOUND".
 
-    Description:
+    Video description:
     {description}
+
+    Audio transcript:
+    {transcript_text if transcript_text else "(not available)"}
     """
 
     ai_response = client.chat.completions.create(
@@ -152,49 +190,6 @@ def get_ingredients():
     )
 
     result = sanitize_ingredients(ai_response.choices[0].message.content)
-
-    if "No ingredients could be confidently extracted" in result:
-        try:
-            ydl_opts = {
-                "format": "bestaudio/best",
-                "outtmpl": "audio.%(ext)s",
-                "postprocessors": [{
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                }],
-                "quiet": True
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([f"https://youtube.com/watch?v={video_id}"])
-
-            with open("audio.mp3", "rb") as audio_file:
-                transcript = client.audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file
-                )
-
-            prompt2 = f"""
-            This is a transcript from a cooking video. Extract all ingredients mentioned with their amounts.
-            Return as a clean numbered list in the format: "1. 2 cups flour", "2. 1/2 teaspoon salt", etc.
-            Include quantities and units (cups, tablespoons, grams, pinch, etc.) for each ingredient.
-            Be as specific as possible with measurements even if approximate.
-            Do NOT include recipe names, section titles, or non-ingredient items.
-
-            Transcript:
-            {transcript.text[:4000]}
-            """
-
-            ai_response2 = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt2}]
-            )
-            result = sanitize_ingredients(ai_response2.choices[0].message.content)
-
-            if os.path.exists("audio.mp3"):
-                os.remove("audio.mp3")
-
-        except Exception:
-            result = "No ingredients could be confidently extracted from this video."
 
     RESULT_CACHE[video_id] = result
     return jsonify({"ingredients": result})
