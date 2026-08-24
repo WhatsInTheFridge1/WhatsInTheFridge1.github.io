@@ -8,7 +8,7 @@ function RecipeDetail({ video, onBack }) {
   useEffect(() => {
     const fetchIngredients = async () => {
       setLoading(true);
-      const url = new URL('http://localhost:5000/ingredients');
+      const url = new URL('https://whatsinthefridge2-github-io.onrender.com/ingredients');
       url.searchParams.set('id', video.id);
       if (useAudio) {
         url.searchParams.set('transcribe_audio', 'true');
