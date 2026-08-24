@@ -113,7 +113,6 @@ def search_recipes():
 @app.route("/ingredients", methods=["GET"])
 def get_ingredients():
     video_id = request.args.get("id", "")
-    transcribe_audio = request.args.get("transcribe_audio", "false").lower() in {"1", "true", "yes"}
 
     if not video_id:
         return jsonify({"ingredients": "No video was provided."})
@@ -154,7 +153,7 @@ def get_ingredients():
 
     result = sanitize_ingredients(ai_response.choices[0].message.content)
 
-    if "No ingredients could be confidently extracted" in result and transcribe_audio:
+    if "No ingredients could be confidently extracted" in result:
         try:
             ydl_opts = {
                 "format": "bestaudio/best",

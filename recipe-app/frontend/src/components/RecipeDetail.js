@@ -3,16 +3,12 @@ import React, { useState, useEffect } from 'react';
 function RecipeDetail({ video, onBack }) {
   const [ingredients, setIngredients] = useState('');
   const [loading, setLoading] = useState(true);
-  const [useAudio, setUseAudio] = useState(false);
 
   useEffect(() => {
     const fetchIngredients = async () => {
       setLoading(true);
       const url = new URL('https://whatsinthefridge2-github-io.onrender.com/ingredients');
       url.searchParams.set('id', video.id);
-      if (useAudio) {
-        url.searchParams.set('transcribe_audio', 'true');
-      }
 
       const response = await fetch(url.toString());
       const data = await response.json();
@@ -21,22 +17,13 @@ function RecipeDetail({ video, onBack }) {
     };
 
     fetchIngredients();
-  }, [video.id, useAudio]);
+  }, [video.id]);
 
   return (
     <div style={styles.container}>
       <button onClick={onBack} style={styles.backButton}>← Back to Results</button>
       <h2 style={styles.title}>{video.title}</h2>
       <p style={styles.channel}>📺 {video.channel}</p>
-
-      <label style={styles.audioToggle}>
-        <input
-          type="checkbox"
-          checked={useAudio}
-          onChange={(e) => setUseAudio(e.target.checked)}
-        />
-        Use audio transcription if needed
-      </label>
 
       <div style={styles.content}>
         <div style={styles.videoSection}>
@@ -69,7 +56,6 @@ const styles = {
   backButton: { backgroundColor: '#111111', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '1rem', marginBottom: '20px' },
   title: { fontSize: '1.5rem', color: '#333', marginBottom: '5px' },
   channel: { color: '#888', marginBottom: '20px' },
-  audioToggle: { display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px', fontSize: '0.95rem', color: '#333', cursor: 'pointer' },
   content: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' },
   videoSection: { borderRadius: '12px', overflow: 'hidden' },
   iframe: { borderRadius: '12px' },
