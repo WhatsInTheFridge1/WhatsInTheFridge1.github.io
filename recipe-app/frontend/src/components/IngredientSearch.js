@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 
-function IngredientSearch({ onSearch, onClose, inline = false }) {
+function IngredientSearch({ ingredients, onAdd, onRemove, onSearch, onClose, inline = false }) {
   const [input, setInput] = useState('');
-  const [ingredients, setIngredients] = useState([]);
   const [strictMode, setStrictMode] = useState(false);
 
   const addIngredient = () => {
-    if (input.trim() && !ingredients.includes(input.trim())) {
-      setIngredients([...ingredients, input.trim()]);
+    const trimmed = input.trim();
+    if (trimmed && !ingredients.includes(trimmed)) {
+      onAdd(trimmed);
       setInput('');
     }
   };
 
   const removeIngredient = (item) => {
-    setIngredients(ingredients.filter(i => i !== item));
+    onRemove(item);
   };
 
   const handleKeyPress = (e) => {

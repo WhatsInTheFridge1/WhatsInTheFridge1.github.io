@@ -3,22 +3,61 @@ import SearchBar from './components/SearchBar';
 import VideoCard from './components/VideoCard';
 import RecipeDetail from './components/RecipeDetail';
 import IngredientSearch from './components/IngredientSearch';
+import CategoryBrowser from './components/CategoryBrowser';
 import logo from './WTF.png'; // <-- put WTF.png inside src/ (next to App.js) and import it like this
 
-const INGREDIENT_OPTIONS = [
-  'Chicken', 'Beef', 'Pasta', 'Rice', 'Eggs', 'Tomato', 'Garlic', 'Onion',
-  'Broccoli', 'Spinach', 'Mushrooms', 'Lemon', 'Potato', 'Cheese', 'Beans',
-  'Avocado', 'Salmon', 'Shrimp', 'Tofu', 'Peppers', 'Coconut', 'Curry', 'Tortillas'
+const INGREDIENT_CATEGORIES = [
+  {
+    name: 'Fruits',
+    emoji: '🍎',
+    items: ['Lemon', 'Lime', 'Avocado', 'Coconut', 'Apple', 'Banana'],
+  },
+  {
+    name: 'Vegetables',
+    emoji: '🥦',
+    items: ['Tomato', 'Garlic', 'Onion', 'Broccoli', 'Spinach', 'Mushrooms', 'Potato', 'Peppers', 'Carrot'],
+  },
+  {
+    name: 'Proteins',
+    emoji: '🥩',
+    items: ['Chicken', 'Beef', 'Eggs', 'Salmon', 'Shrimp', 'Tofu', 'Turkey'],
+  },
+  {
+    name: 'Grains & Legumes',
+    emoji: '🌾',
+    items: ['Rice', 'Pasta', 'Tortillas', 'Beans', 'Quinoa', 'Bread'],
+  },
+  {
+    name: 'Dairy',
+    emoji: '🧀',
+    items: ['Cheese', 'Butter', 'Milk', 'Yogurt', 'Cream'],
+  },
+  {
+    name: 'Spices & Herbs',
+    emoji: '🌿',
+    items: ['Curry', 'Cumin', 'Paprika', 'Basil', 'Oregano', 'Cilantro', 'Ginger', 'Cinnamon'],
+  },
 ];
 
 function App() {
   const [videos, setVideos] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [fridgeIngredients, setFridgeIngredients] = useState([]);
+
+  const addIngredient = (ingredient) => {
+    const trimmed = ingredient.trim();
+    if (trimmed && !fridgeIngredients.includes(trimmed)) {
+      setFridgeIngredients(prev => [...prev, trimmed]);
+    }
+  };
+
+  const removeIngredient = (ingredient) => {
+    setFridgeIngredients(prev => prev.filter(item => item !== ingredient));
+  };
 
   const toggleIngredient = (ingredient) => {
-    setSelectedIngredients(prev =>
+    setFridgeIngredients(prev =>
       prev.includes(ingredient)
         ? prev.filter(item => item !== ingredient)
         : [...prev, ingredient]
@@ -32,12 +71,6 @@ function App() {
     const data = await response.json();
     setVideos(data);
     setLoading(false);
-  };
-
-  const searchSelectedIngredients = async () => {
-    if (selectedIngredients.length === 0) return;
-    const query = selectedIngredients.join(' ');
-    await searchRecipes(query);
   };
 
   return (
@@ -63,42 +96,23 @@ function App() {
 
       <main style={styles.mainContent}>
         <div style={styles.primaryPanel}>
-          <IngredientSearch onSearch={searchRecipes} inline />
+          <IngredientSearch
+            ingredients={fridgeIngredients}
+            onAdd={addIngredient}
+            onRemove={removeIngredient}
+            onSearch={searchRecipes}
+            inline
+          />
         </div>
 
         <aside style={styles.sidePanel}>
           <h2 style={styles.exploreTitle}>Browse ingredients</h2>
-          <div style={styles.tagGrid}>
-            {INGREDIENT_OPTIONS.map(ingredient => {
-              const isSelected = selectedIngredients.includes(ingredient);
-              return (
-                <button
-                  key={ingredient}
-                  onClick={() => toggleIngredient(ingredient)}
-                  style={{
-                    ...styles.tagButton,
-                    backgroundColor: isSelected ? '#111111' : '#f5f5f5',
-                    color: isSelected ? 'white' : '#333',
-                    borderColor: isSelected ? '#111111' : '#dddddd',
-                  }}
-                >
-                  {ingredient}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={searchSelectedIngredients}
-            style={{
-              ...styles.searchButton,
-              opacity: selectedIngredients.length === 0 ? 0.5 : 1,
-              cursor: selectedIngredients.length === 0 ? 'not-allowed' : 'pointer',
-            }}
-            disabled={selectedIngredients.length === 0}
-          >
-            Find recipes with these ingredients
-          </button>
+          <p style={styles.exploreHint}>Tap an ingredient to add it to your fridge.</p>
+          <CategoryBrowser
+            categories={INGREDIENT_CATEGORIES}
+            selected={fridgeIngredients}
+            onToggle={toggleIngredient}
+          />
         </aside>
       </main>
 
@@ -200,33 +214,13 @@ const styles = {
   },
   exploreTitle: {
     fontSize: '1.2rem',
-    margin: '0 0 18px',
+    margin: '0 0 6px',
     color: '#333',
   },
-  tagGrid: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
-    marginBottom: '20px',
-  },
-  tagButton: {
-    padding: '10px 14px',
-    borderRadius: '25px',
-    border: '2px solid',
-    cursor: 'pointer',
-    fontSize: '0.9rem',
-    fontWeight: 'bold',
-    transition: 'all 0.2s',
-  },
-  searchButton: {
-    width: '100%',
-    padding: '14px',
-    borderRadius: '25px',
-    border: 'none',
-    backgroundColor: '#111111',
-    color: 'white',
-    fontSize: '0.95rem',
-    fontWeight: 'bold',
+  exploreHint: {
+    fontSize: '0.85rem',
+    color: '#888',
+    margin: '0 0 16px',
   },
   resultsSection: {
     maxWidth: '1280px',
