@@ -134,6 +134,10 @@ function App() {
           )}
         </main>
       )}
+
+      <footer style={styles.footer}>
+        <a href="/privacy.html" style={styles.footerLink}>Privacy Policy</a>
+      </footer>
     </div>
   );
 }
@@ -248,6 +252,15 @@ const styles = {
   },
   logoRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px' },
   logo: { height: '70px', width: 'auto', objectFit: 'contain' },
+  footer: {
+    textAlign: 'center',
+    padding: '30px 20px',
+  },
+  footerLink: {
+    color: '#888',
+    fontSize: '0.85rem',
+    textDecoration: 'underline',
+  },
 };
 
 export default App;
