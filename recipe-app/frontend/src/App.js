@@ -74,6 +74,34 @@ function App() {
   };
 
   return (
+    <>
+    <style>{`
+      button {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      button:active {
+        transform: translateY(0px) scale(0.97);
+      }
+      input {
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+      input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+      }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .fade-in {
+        animation: fadeInUp 0.3s ease forwards;
+      }
+    `}</style>
     <div style={styles.app}>
       <header style={styles.header}>
         <div style={styles.headerTop}>
@@ -139,6 +167,7 @@ function App() {
         <a href="/privacy.html" style={styles.footerLink}>Privacy Policy</a>
       </footer>
     </div>
+    </>
   );
 }
 
