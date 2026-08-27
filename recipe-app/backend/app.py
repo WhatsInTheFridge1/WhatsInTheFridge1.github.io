@@ -72,23 +72,41 @@ def sanitize_ingredients(raw_text):
     return "\n".join(lines)
 
 
-def description_likely_has_ingredients(description):
+def description_matches_query(description, query):
     """Cheap, description-only check used to filter search results.
     Does not touch audio/Whisper, so a video can still pass full
     extraction later even if this says no (it just won't show up in search).
+    When a query is given, checks whether the description actually backs up
+    those specific ingredients rather than just containing *some* ingredient
+    list (so results aren't just whatever YouTube's title search returned).
     """
     if not description or not description.strip():
         return False
 
-    prompt = f"""
-    Does this YouTube video description contain an actual list of cooking
-    ingredients (specific items and/or quantities), as opposed to just a
-    title, links, hashtags, or sponsor/subscribe messages?
-    Answer with exactly one word: YES or NO.
+    query = (query or "").strip()
 
-    Description:
-    {description[:2000]}
-    """
+    if not query:
+        prompt = f"""
+        Does this YouTube video description contain an actual list of cooking
+        ingredients (specific items and/or quantities), as opposed to just a
+        title, links, hashtags, or sponsor/subscribe messages?
+        Answer with exactly one word: YES or NO.
+
+        Description:
+        {description[:2000]}
+        """
+    else:
+        prompt = f"""
+        A user searched for a recipe using these ingredients: "{query}".
+        Does this YouTube video's description indicate the recipe actually
+        uses those ingredients (allow for synonyms/related forms, e.g.
+        "noodles" matches "pasta")? Ignore unrelated text like links,
+        hashtags, or sponsor/subscribe messages.
+        Answer with exactly one word: YES or NO.
+
+        Description:
+        {description[:2000]}
+        """
 
     try:
         response = client.chat.completions.create(
@@ -131,7 +149,7 @@ def search_recipes():
         cached = RESULT_CACHE.get(video["id"])
         if cached is not None:
             return "No ingredients could be confidently extracted" not in cached
-        return description_likely_has_ingredients(video["description"])
+        return description_matches_query(video["description"], query)
 
     with ThreadPoolExecutor(max_workers=8) as executor:
         keep_flags = list(executor.map(keep, candidates))
