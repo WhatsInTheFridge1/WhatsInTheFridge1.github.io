@@ -151,7 +151,7 @@ def search_recipes():
             return "No ingredients could be confidently extracted" not in cached
         return description_matches_query(video["description"], query)
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=32) as executor:
         keep_flags = list(executor.map(keep, candidates))
 
     videos = [video for video, keep_it in zip(candidates, keep_flags) if keep_it]
