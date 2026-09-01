@@ -103,11 +103,17 @@ def description_matches_query(description, query):
         "no other ingredients" - extract just the actual ingredient names
         and ignore the rest).
 
-        Does this YouTube video's description indicate the recipe uses MOST
-        of those ingredients (a majority - it does not need to use every
-        single one, allow for synonyms/related forms, e.g. "noodles" matches
-        "pasta")? Ignore unrelated text like links, hashtags, or
-        sponsor/subscribe messages.
+        Look at this YouTube video's description. Answer YES only if BOTH of
+        these are true:
+        1. It contains an actual, specific list of cooking ingredients
+           (items and/or quantities) for this recipe - not just a passing
+           mention in a title, blurb, links, hashtags, or sponsor/subscribe
+           messages.
+        2. That ingredient list covers MOST of the ingredients above (it does
+           not need to use every single one - allow for synonyms/related
+           forms, e.g. "noodles" matches "pasta").
+
+        If either condition fails, answer NO.
         Answer with exactly one word: YES or NO.
 
         Description:
