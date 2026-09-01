@@ -97,11 +97,17 @@ def description_matches_query(description, query):
         """
     else:
         prompt = f"""
-        A user searched for a recipe using these ingredients: "{query}".
-        Does this YouTube video's description indicate the recipe actually
-        uses those ingredients (allow for synonyms/related forms, e.g.
-        "noodles" matches "pasta")? Ignore unrelated text like links,
-        hashtags, or sponsor/subscribe messages.
+        A user is looking for a recipe using ingredients they have on hand.
+        Their ingredients: "{query}"
+        (the phrasing may include extra words like "recipe using only" or
+        "no other ingredients" - extract just the actual ingredient names
+        and ignore the rest).
+
+        Does this YouTube video's description indicate the recipe uses MOST
+        of those ingredients (a majority - it does not need to use every
+        single one, allow for synonyms/related forms, e.g. "noodles" matches
+        "pasta")? Ignore unrelated text like links, hashtags, or
+        sponsor/subscribe messages.
         Answer with exactly one word: YES or NO.
 
         Description:
