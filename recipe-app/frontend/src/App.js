@@ -145,7 +145,11 @@ function App() {
       </main>
 
       {selectedVideo ? (
-        <RecipeDetail video={selectedVideo} onBack={() => setSelectedVideo(null)} />
+        <RecipeDetail
+          video={selectedVideo}
+          onBack={() => setSelectedVideo(null)}
+          fridgeIngredients={fridgeIngredients}
+        />
       ) : (
         <main style={styles.resultsSection}>
           {loading && <p style={styles.loading}>Finding recipes...</p>}
