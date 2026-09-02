@@ -25,6 +25,19 @@ MEASUREMENT_WORDS = (
     "dash", "dashes", "ml", "l", "milliliter", "milliliters", "liter", "liters"
 )
 
+# Word-boundary-safe subset for scanning raw prose (video descriptions).
+# Excludes single-letter abbreviations like "g"/"l" which would otherwise
+# match inside ordinary words (e.g. "g" inside "garlic").
+_DESCRIPTION_MEASUREMENT_PATTERN = re.compile(
+    r'\b(' + '|'.join([
+        "cup", "cups", "tablespoon", "tablespoons", "tbsp", "teaspoon", "teaspoons",
+        "tsp", "gram", "grams", "oz", "ounce", "ounces", "lb", "lbs", "pound",
+        "pounds", "pinch", "clove", "cloves", "ml", "milliliter", "milliliters",
+        "liter", "liters", "kg", "kilogram", "kilograms",
+    ]) + r')\b',
+    re.IGNORECASE
+)
+
 INGREDIENT_HINTS = (
     "salt", "pepper", "flour", "sugar", "oil", "butter", "milk", "egg", "eggs",
     "garlic", "onion", "tomato", "tomatoes", "chicken", "beef", "pasta", "rice",
@@ -83,6 +96,15 @@ def description_matches_query(description, query):
     if not description or not description.strip():
         return False
 
+    # Deterministic backstop: real ingredient lists almost always include
+    # quantities. A description with none is almost certainly a vague blurb
+    # ("only requires 4 ingredients!") rather than an actual list, so reject
+    # it outright instead of relying on the LLM to catch every such case.
+    has_digit = any(ch.isdigit() for ch in description)
+    has_measurement_word = bool(_DESCRIPTION_MEASUREMENT_PATTERN.search(description))
+    if not (has_digit or has_measurement_word):
+        return False
+
     query = (query or "").strip()
 
     if not query:
@@ -106,9 +128,15 @@ def description_matches_query(description, query):
         Look at this YouTube video's description. Answer YES only if BOTH of
         these are true:
         1. It contains an actual, specific list of cooking ingredients
-           (items and/or quantities) for this recipe - not just a passing
-           mention in a title, blurb, links, hashtags, or sponsor/subscribe
-           messages.
+           (individual items and/or quantities) for this recipe - not just a
+           passing mention in a title, blurb, links, hashtags, or
+           sponsor/subscribe messages.
+           Example of what does NOT count (answer NO): "This dish only
+           requires 4 ingredients for the sauce, full recipe on my site"
+           - that talks ABOUT ingredients without listing any of them.
+           Example of what DOES count (answer YES): "Ingredients: - 2 red
+           onions, sliced - 5 cloves garlic - 1kg chicken thighs" - actual
+           items are named.
         2. That ingredient list covers MOST of the ingredients above (it does
            not need to use every single one - allow for synonyms/related
            forms, e.g. "noodles" matches "pasta").
@@ -124,7 +152,8 @@ def description_matches_query(description, query):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=3
+            max_tokens=3,
+            temperature=0
         )
         return response.choices[0].message.content.strip().upper().startswith("YES")
     except Exception:

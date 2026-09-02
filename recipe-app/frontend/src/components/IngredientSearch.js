@@ -76,7 +76,7 @@ function IngredientSearch({ ingredients, onAdd, onRemove, onSearch, onClose, inl
           onClick={() => setStrictMode(!strictMode)}
           style={{
             ...styles.toggle,
-            backgroundColor: strictMode ? '#111111' : '#ccc',
+            backgroundColor: strictMode ? '#C9622B' : '#E8D5BC',
           }}
         >
           <div style={{
@@ -128,8 +128,8 @@ const styles = {
     backgroundColor: 'white',
     borderRadius: '20px',
     padding: '28px',
-    border: '1px solid #e0e0e0',
-    boxShadow: '0 10px 28px rgba(0,0,0,0.05)',
+    border: '1px solid #EAD9C4',
+    boxShadow: '0 10px 28px rgba(74,63,53,0.06)',
   },
   modal: {
     backgroundColor: 'white',
@@ -147,15 +147,15 @@ const styles = {
     border: 'none',
     fontSize: '1.2rem',
     cursor: 'pointer',
-    color: '#888',
+    color: '#8A7A6D',
   },
   title: {
     fontSize: '1.7rem',
-    color: '#333',
+    color: '#4A3F35',
     margin: '0 0 8px 0',
   },
   subtitle: {
-    color: '#888',
+    color: '#8A7A6D',
     marginBottom: '20px',
     fontSize: '0.95rem',
   },
@@ -170,7 +170,7 @@ const styles = {
     minWidth: '180px',
     padding: '12px 15px',
     borderRadius: '20px',
-    border: '2px solid #111111',
+    border: '2px solid #C9622B',
     outline: 'none',
     fontSize: '1rem',
   },
@@ -178,7 +178,7 @@ const styles = {
     padding: '12px 20px',
     borderRadius: '20px',
     border: 'none',
-    backgroundColor: '#111111',
+    backgroundColor: '#C9622B',
     color: 'white',
     cursor: 'pointer',
     fontWeight: 'bold',
@@ -192,9 +192,9 @@ const styles = {
     minHeight: '40px',
   },
   tag: {
-    backgroundColor: '#f0f0f0',
-    color: '#111111',
-    border: '1px solid #111111',
+    backgroundColor: '#EEF3ED',
+    color: '#4A3F35',
+    border: '1px solid #7A9B76',
     borderRadius: '20px',
     padding: '6px 12px',
     display: 'flex',
@@ -208,7 +208,7 @@ const styles = {
     fontSize: '0.8rem',
   },
   hint: {
-    color: '#bbb',
+    color: '#B5A28E',
     fontStyle: 'italic',
     fontSize: '0.9rem',
     marginBottom: '15px',
@@ -217,7 +217,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FBF1E6',
     borderRadius: '12px',
     padding: '12px 16px',
     marginBottom: '20px',
@@ -230,12 +230,12 @@ const styles = {
     margin: 0,
     fontWeight: 'bold',
     fontSize: '0.95rem',
-    color: '#333',
+    color: '#4A3F35',
   },
   toggleDescription: {
     margin: '4px 0 0 0',
     fontSize: '0.8rem',
-    color: '#888',
+    color: '#8A7A6D',
   },
   toggle: {
     width: '50px',
@@ -261,7 +261,7 @@ const styles = {
     padding: '14px',
     borderRadius: '25px',
     border: 'none',
-    backgroundColor: '#111111',
+    backgroundColor: '#C9622B',
     color: 'white',
     fontSize: '1.1rem',
     fontWeight: 'bold',

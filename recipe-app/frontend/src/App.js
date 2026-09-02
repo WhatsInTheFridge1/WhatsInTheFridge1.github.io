@@ -4,6 +4,7 @@ import VideoCard from './components/VideoCard';
 import RecipeDetail from './components/RecipeDetail';
 import IngredientSearch from './components/IngredientSearch';
 import CategoryBrowser from './components/CategoryBrowser';
+import useIsMobile from './useIsMobile';
 import logo from './WTF.png'; // <-- put WTF.png inside src/ (next to App.js) and import it like this
 
 const INGREDIENT_CATEGORIES = [
@@ -44,6 +45,7 @@ function App() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fridgeIngredients, setFridgeIngredients] = useState([]);
+  const isMobile = useIsMobile();
 
   const addIngredient = (ingredient) => {
     const trimmed = ingredient.trim();
@@ -101,6 +103,14 @@ function App() {
       .fade-in {
         animation: fadeInUp 0.3s ease forwards;
       }
+      @keyframes fridgeSwing {
+        0%, 100% { transform: perspective(200px) rotateY(0deg); }
+        50% { transform: perspective(200px) rotateY(-28deg); }
+      }
+      .fridge-loading {
+        animation: fridgeSwing 0.9s ease-in-out infinite;
+        transform-origin: left center;
+      }
     `}</style>
     <div style={styles.app}>
       <header style={styles.header}>
@@ -108,21 +118,26 @@ function App() {
           <div style={styles.brandWrap}>
             <div>
               <div style={styles.logoRow}>
-                <img src={logo} alt="What's In The Fridge? Logo" style={styles.logo} />
-                <h1 style={styles.title}>What's In The Fridge?</h1>
+                <img
+                  src={logo}
+                  alt="What's In The Fridge? Logo"
+                  style={styles.logo}
+                  className={loading ? 'fridge-loading' : ''}
+                />
+                <h1 style={{ ...styles.title, ...(isMobile ? { fontSize: '1.7rem', minWidth: 0 } : {}) }}>What's In The Fridge?</h1>
               </div>
               <p style={styles.subtitle}>Turn the ingredients you have into a recipe idea.</p>
             </div>
           </div>
 
-          <div style={styles.cornerCard}>
+          <div style={{ ...styles.cornerCard, ...(isMobile ? { minWidth: 0, width: '100%' } : {}) }}>
             <span style={styles.cornerLabel}>Recipe Finder</span>
             <SearchBar onSearch={searchRecipes} />
           </div>
         </div>
       </header>
 
-      <main style={styles.mainContent}>
+      <main style={{ ...styles.mainContent, ...(isMobile ? { gridTemplateColumns: '1fr' } : {}) }}>
         <div style={styles.primaryPanel}>
           <IngredientSearch
             ingredients={fridgeIngredients}
@@ -179,13 +194,13 @@ const styles = {
   app: {
     fontFamily: 'Arial, sans-serif',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #f7f7f7 0%, #ececec 100%)',
-    color: '#333',
+    background: 'linear-gradient(180deg, #FFF8F0 0%, #FBEEDD 100%)',
+    color: '#4A3F35',
   },
   header: {
-    backgroundColor: '#111111',
+    backgroundColor: '#C9622B',
     padding: '28px 22px 24px',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 4px 16px rgba(201, 98, 43, 0.25)',
   },
   headerTop: {
     maxWidth: '1280px',
@@ -209,13 +224,13 @@ const styles = {
     lineHeight: 1.2,
   },
   subtitle: {
-    color: '#dddddd',
+    color: '#FBE7D5',
     margin: '8px 0 0',
     fontSize: '1.05rem',
   },
   cornerCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    border: '1px solid rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    border: '1px solid rgba(255,255,255,0.3)',
     borderRadius: '16px',
     padding: '12px 16px',
     minWidth: '280px',
@@ -223,7 +238,7 @@ const styles = {
   },
   cornerLabel: {
     display: 'block',
-    color: '#dddddd',
+    color: '#FBE7D5',
     fontWeight: 'bold',
     fontSize: '0.75rem',
     letterSpacing: '0.08em',
@@ -243,20 +258,21 @@ const styles = {
     minWidth: 0,
   },
   sidePanel: {
+    minWidth: 0,
     backgroundColor: 'white',
     borderRadius: '18px',
-    boxShadow: '0 8px 20px rgba(0,0,0,0.05)',
+    boxShadow: '0 8px 20px rgba(74,63,53,0.06)',
     padding: '20px',
-    border: '1px solid #e0e0e0',
+    border: '1px solid #EAD9C4',
   },
   exploreTitle: {
     fontSize: '1.2rem',
     margin: '0 0 6px',
-    color: '#333',
+    color: '#4A3F35',
   },
   exploreHint: {
     fontSize: '0.85rem',
-    color: '#888',
+    color: '#8A7A6D',
     margin: '0 0 16px',
   },
   resultsSection: {
@@ -273,12 +289,12 @@ const styles = {
   loading: {
     textAlign: 'center',
     fontSize: '1.2rem',
-    color: '#666',
+    color: '#6B5D4F',
     marginTop: '40px',
   },
   empty: {
     textAlign: 'center',
-    color: '#888',
+    color: '#8A7A6D',
     marginTop: '60px',
     fontSize: '1.1rem',
     lineHeight: '1.8',
@@ -290,7 +306,7 @@ const styles = {
     padding: '30px 20px',
   },
   footerLink: {
-    color: '#888',
+    color: '#8A7A6D',
     fontSize: '0.85rem',
     textDecoration: 'underline',
   },

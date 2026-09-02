@@ -13,11 +13,11 @@ function VideoCard({ video, onClick }) {
 }
 
 const styles = {
-  card: { backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', transition: 'transform 0.2s' },
+  card: { backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 8px rgba(74,63,53,0.1)', transition: 'transform 0.2s' },
   thumbnail: { width: '100%', height: '180px', objectFit: 'cover' },
   info: { padding: '12px' },
-  title: { fontSize: '0.95rem', margin: '0 0 8px 0', color: '#333', lineHeight: '1.4' },
-  channel: { fontSize: '0.85rem', color: '#888', margin: 0 }
+  title: { fontSize: '0.95rem', margin: '0 0 8px 0', color: '#4A3F35', lineHeight: '1.4' },
+  channel: { fontSize: '0.85rem', color: '#8A7A6D', margin: 0 }
 };
 
 export default VideoCard;

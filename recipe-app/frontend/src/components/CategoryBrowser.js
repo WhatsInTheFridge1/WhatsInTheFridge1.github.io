@@ -16,8 +16,8 @@ function CategoryBrowser({ categories, selected, onToggle }) {
               onClick={() => setActiveCategory(category.name)}
               style={{
                 ...styles.tabButton,
-                backgroundColor: isActive ? '#111111' : '#f5f5f5',
-                color: isActive ? 'white' : '#333',
+                backgroundColor: isActive ? '#C9622B' : '#FBF1E6',
+                color: isActive ? 'white' : '#4A3F35',
               }}
             >
               {category.emoji} {category.name}
@@ -35,9 +35,9 @@ function CategoryBrowser({ categories, selected, onToggle }) {
               onClick={() => onToggle(item)}
               style={{
                 ...styles.itemButton,
-                backgroundColor: isSelected ? '#111111' : '#f5f5f5',
-                color: isSelected ? 'white' : '#333',
-                borderColor: isSelected ? '#111111' : '#dddddd',
+                backgroundColor: isSelected ? '#7A9B76' : '#FBF1E6',
+                color: isSelected ? 'white' : '#4A3F35',
+                borderColor: isSelected ? '#7A9B76' : '#EAD9C4',
               }}
             >
               {item}
@@ -56,7 +56,7 @@ const styles = {
     overflowX: 'auto',
     paddingBottom: '12px',
     marginBottom: '14px',
-    borderBottom: '1px solid #eee',
+    borderBottom: '1px solid #F0E2D0',
   },
   tabButton: {
     flexShrink: 0,

@@ -23,9 +23,9 @@ function SearchBar({ onSearch }) {
 }
 
 const styles = {
-  form: { display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' },
-  input: { padding: '12px 20px', fontSize: '1rem', borderRadius: '25px', border: 'none', width: '400px', outline: 'none' },
-  button: { padding: '12px 25px', fontSize: '1rem', borderRadius: '25px', border: 'none', backgroundColor: '#111111', color: 'white', cursor: 'pointer', fontWeight: 'bold' }
+  form: { display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center', flexWrap: 'wrap' },
+  input: { padding: '12px 20px', fontSize: '1rem', borderRadius: '25px', border: 'none', width: '100%', maxWidth: '400px', minWidth: 0, flex: '1 1 200px', outline: 'none', boxSizing: 'border-box' },
+  button: { padding: '12px 25px', fontSize: '1rem', borderRadius: '25px', border: 'none', backgroundColor: '#4A3F35', color: 'white', cursor: 'pointer', fontWeight: 'bold' }
 };
 
 export default SearchBar;

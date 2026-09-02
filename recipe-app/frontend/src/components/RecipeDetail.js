@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useIsMobile from '../useIsMobile';
 
 const GENERIC_SPICE_TERMS = ['spice', 'spices', 'seasoning', 'seasonings', 'herb', 'herbs'];
 
@@ -15,6 +16,7 @@ function RecipeDetail({ video, onBack, fridgeIngredients = [] }) {
   const [ingredients, setIngredients] = useState('');
   const [loading, setLoading] = useState(true);
   const [checked, setChecked] = useState({});
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const fetchIngredients = async () => {
@@ -63,11 +65,11 @@ function RecipeDetail({ video, onBack, fridgeIngredients = [] }) {
       <h2 style={styles.title}>{video.title}</h2>
       <p style={styles.channel}>📺 {video.channel}</p>
 
-      <div style={styles.content}>
+      <div style={{ ...styles.content, ...(isMobile ? { gridTemplateColumns: '1fr' } : {}) }}>
         <div style={styles.videoSection}>
           <iframe
             width="100%"
-            height="400"
+            height={isMobile ? 220 : 400}
             src={`https://www.youtube.com/embed/${video.id}`}
             title={video.title}
             frameBorder="0"
@@ -116,23 +118,23 @@ function RecipeDetail({ video, onBack, fridgeIngredients = [] }) {
 
 const styles = {
   container: { maxWidth: '1200px', margin: '0 auto', padding: '20px' },
-  backButton: { backgroundColor: '#111111', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '1rem', marginBottom: '20px' },
-  title: { fontSize: '1.5rem', color: '#333', marginBottom: '5px' },
-  channel: { color: '#888', marginBottom: '20px' },
+  backButton: { backgroundColor: '#C9622B', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '20px', cursor: 'pointer', fontSize: '1rem', marginBottom: '20px' },
+  title: { fontSize: '1.5rem', color: '#4A3F35', marginBottom: '5px' },
+  channel: { color: '#8A7A6D', marginBottom: '20px' },
   content: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' },
-  videoSection: { borderRadius: '12px', overflow: 'hidden' },
+  videoSection: { minWidth: 0, borderRadius: '12px', overflow: 'hidden' },
   iframe: { borderRadius: '12px' },
-  ingredientsSection: { backgroundColor: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
-  ingredientsTitle: { color: '#111111', marginTop: 0 },
-  loadingText: { color: '#888', fontStyle: 'italic' },
-  ingredients: { whiteSpace: 'pre-wrap', fontFamily: 'Arial', lineHeight: '1.8', color: '#333' },
-  needSummary: { color: '#666', fontSize: '0.9rem', marginTop: 0, marginBottom: '14px' },
+  ingredientsSection: { minWidth: 0, backgroundColor: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 8px rgba(74,63,53,0.1)' },
+  ingredientsTitle: { color: '#4A3F35', marginTop: 0 },
+  loadingText: { color: '#8A7A6D', fontStyle: 'italic' },
+  ingredients: { whiteSpace: 'pre-wrap', fontFamily: 'Arial', lineHeight: '1.8', color: '#4A3F35' },
+  needSummary: { color: '#6B5D4F', fontSize: '0.9rem', marginTop: 0, marginBottom: '14px' },
   checklist: { listStyle: 'none', margin: 0, padding: 0 },
-  checklistItem: { borderBottom: '1px solid #f0f0f0', padding: '10px 0' },
+  checklistItem: { borderBottom: '1px solid #F0E2D0', padding: '10px 0' },
   checklistLabel: { display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer' },
-  checkbox: { marginTop: '3px', width: '17px', height: '17px', cursor: 'pointer', flexShrink: 0 },
-  needText: { color: '#333', fontWeight: 'bold' },
-  haveText: { color: '#aaa', textDecoration: 'line-through' },
+  checkbox: { marginTop: '3px', width: '17px', height: '17px', cursor: 'pointer', flexShrink: 0, accentColor: '#7A9B76' },
+  needText: { color: '#B34F1E', fontWeight: 'bold' },
+  haveText: { color: '#7A9B76', textDecoration: 'line-through' },
 };
 
 export default RecipeDetail;
