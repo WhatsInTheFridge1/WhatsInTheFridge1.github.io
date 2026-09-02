@@ -22,10 +22,7 @@ function IngredientSearch({ ingredients, onAdd, onRemove, onSearch, onClose, inl
 
   const handleSearch = () => {
     if (ingredients.length > 0) {
-      const query = strictMode
-        ? `recipe using only ${ingredients.join(' and ')} no other ingredients`
-        : ingredients.join(' ');
-      onSearch(query);
+      onSearch(ingredients.join(' '), strictMode);
       if (onClose) onClose();
     }
   };

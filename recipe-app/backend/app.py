@@ -85,13 +85,107 @@ def sanitize_ingredients(raw_text):
     return "\n".join(lines)
 
 
-def description_matches_query(description, query):
+_QUERY_STOPWORDS = {
+    "recipe", "using", "only", "and", "no", "other", "ingredients", "with",
+    "the", "a", "an", "of", "for"
+}
+
+_GENERIC_SPICE_TERMS = {"spice", "spices", "seasoning", "seasonings", "herb", "herbs"}
+
+_SPICE_KEYWORDS = (
+    "salt", "pepper", "cumin", "paprika", "turmeric", "cinnamon", "nutmeg",
+    "clove", "allspice", "cardamom", "coriander", "chili powder", "chilli powder",
+    "cayenne", "garlic powder", "onion powder", "basil", "oregano", "thyme",
+    "rosemary", "parsley", "cilantro", "dill", "bay leaf", "sage", "curry",
+    "ginger", "vanilla", "seasoning", "garam masala", "saffron", "mustard seed",
+)
+
+
+def _query_terms(query):
+    return [w for w in re.findall(r"[a-zA-Z]+", (query or "").lower()) if w not in _QUERY_STOPWORDS]
+
+
+def _term_present(term, lower_text, despaced_text):
+    """Checks a query term against text, tolerating the common real-world
+    mismatches plain substring matching misses: singular/plural ("egg" vs
+    "eggs"), compound-word spacing ("bread crumbs" vs "breadcrumbs"), and
+    generic spice/herb terms standing in for specific ones ("spices"
+    matching a description that lists "paprika" and "black pepper").
+    """
+    if term in _GENERIC_SPICE_TERMS:
+        return any(keyword in lower_text for keyword in _SPICE_KEYWORDS)
+    if term in lower_text:
+        return True
+    if term.endswith('s') and term[:-1] in lower_text:
+        return True
+    if not term.endswith('s') and (term + 's') in lower_text:
+        return True
+    return term.replace(' ', '') in despaced_text
+
+
+def has_ingredient_coverage(text, query, strict=False):
+    """Deterministic coverage check: how many of the query's ingredient
+    terms literally appear in `text` (a video description or a real
+    extracted ingredient list)? LLMs are unreliable at precise counting
+    (verified empirically - gpt-3.5-turbo inconsistently applied this same
+    rule when asked to judge it directly), so this is done in code instead.
+    `strict` requires all-but-at-most-one term present; loose requires a
+    majority.
+    """
+    terms = _query_terms(query)
+    if not terms:
+        return True
+    lower = text.lower()
+    despaced = re.sub(r'\s+', '', lower)
+    missing = sum(1 for term in terms if not _term_present(term, lower, despaced))
+    if strict:
+        return missing <= 1
+    return missing <= len(terms) // 2
+
+
+def description_has_ingredient_list(description):
+    """LLM judgment call: does this description contain an actual, specific
+    ingredient list, as opposed to a vague mention of "ingredients" with
+    nothing named? This is the part that genuinely needs semantic judgment
+    (unlike coverage counting, which is handled deterministically instead).
+    """
+    prompt = f"""
+    Does this YouTube video description contain an actual, specific list of
+    cooking ingredients (individual items and/or quantities) - not just a
+    passing mention in a title, blurb, links, hashtags, or sponsor/subscribe
+    messages?
+    Example of what does NOT count (answer NO): "This dish only requires 4
+    ingredients for the sauce, full recipe on my site" - that talks ABOUT
+    ingredients without listing any of them.
+    Example of what DOES count (answer YES): "Ingredients: - 2 red onions,
+    sliced - 5 cloves garlic - 1kg chicken thighs" - actual items are named.
+    Answer with exactly one word: YES or NO.
+
+    Description:
+    {description[:2000]}
+    """
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=3,
+            temperature=0
+        )
+        return response.choices[0].message.content.strip().upper().startswith("YES")
+    except Exception:
+        # Don't let a transient API error hide a video from search.
+        return True
+
+
+def description_matches_query(description, query, strict=False):
     """Cheap, description-only check used to filter search results.
     Does not touch audio/Whisper, so a video can still pass full
     extraction later even if this says no (it just won't show up in search).
     When a query is given, checks whether the description actually backs up
     those specific ingredients rather than just containing *some* ingredient
     list (so results aren't just whatever YouTube's title search returned).
+    `strict` raises the required ingredient coverage from "most" to
+    "all, or all but one" - used for the fridge panel's Strict Mode toggle.
     """
     if not description or not description.strip():
         return False
@@ -107,64 +201,20 @@ def description_matches_query(description, query):
 
     query = (query or "").strip()
 
+    if not description_has_ingredient_list(description):
+        return False
+
     if not query:
-        prompt = f"""
-        Does this YouTube video description contain an actual list of cooking
-        ingredients (specific items and/or quantities), as opposed to just a
-        title, links, hashtags, or sponsor/subscribe messages?
-        Answer with exactly one word: YES or NO.
-
-        Description:
-        {description[:2000]}
-        """
-    else:
-        prompt = f"""
-        A user is looking for a recipe using ingredients they have on hand.
-        Their ingredients: "{query}"
-        (the phrasing may include extra words like "recipe using only" or
-        "no other ingredients" - extract just the actual ingredient names
-        and ignore the rest).
-
-        Look at this YouTube video's description. Answer YES only if BOTH of
-        these are true:
-        1. It contains an actual, specific list of cooking ingredients
-           (individual items and/or quantities) for this recipe - not just a
-           passing mention in a title, blurb, links, hashtags, or
-           sponsor/subscribe messages.
-           Example of what does NOT count (answer NO): "This dish only
-           requires 4 ingredients for the sauce, full recipe on my site"
-           - that talks ABOUT ingredients without listing any of them.
-           Example of what DOES count (answer YES): "Ingredients: - 2 red
-           onions, sliced - 5 cloves garlic - 1kg chicken thighs" - actual
-           items are named.
-        2. That ingredient list covers MOST of the ingredients above (it does
-           not need to use every single one - allow for synonyms/related
-           forms, e.g. "noodles" matches "pasta").
-
-        If either condition fails, answer NO.
-        Answer with exactly one word: YES or NO.
-
-        Description:
-        {description[:2000]}
-        """
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=3,
-            temperature=0
-        )
-        return response.choices[0].message.content.strip().upper().startswith("YES")
-    except Exception:
-        # Don't let a transient API error hide a video from search.
         return True
+
+    return has_ingredient_coverage(description, query, strict)
 
 
 # Search for recipe videos on YouTube
 @app.route("/search", methods=["GET"])
 def search_recipes():
     query = request.args.get("q", "")
+    strict = request.args.get("strict", "false").lower() in {"1", "true", "yes"}
     url = f"https://www.googleapis.com/youtube/v3/search"
     params = {
         "part": "snippet",
@@ -176,21 +226,39 @@ def search_recipes():
     response = requests.get(url, params=params)
     data = response.json()
 
+    items = data.get("items", [])
+    video_ids = [item["id"]["videoId"] for item in items]
+
+    # search.list only returns a short, truncated description snippet
+    # (~150 chars) - nowhere near enough to judge ingredient coverage from.
+    # Fetch the real, full descriptions in one batched call instead.
+    full_descriptions = {}
+    if video_ids:
+        videos_response = requests.get(
+            "https://www.googleapis.com/youtube/v3/videos",
+            params={"part": "snippet", "id": ",".join(video_ids), "key": YOUTUBE_API_KEY}
+        )
+        for video_item in videos_response.json().get("items", []):
+            full_descriptions[video_item["id"]] = video_item["snippet"]["description"]
+
     candidates = []
-    for item in data.get("items", []):
+    for item in items:
+        video_id = item["id"]["videoId"]
         candidates.append({
-            "id": item["id"]["videoId"],
+            "id": video_id,
             "title": item["snippet"]["title"],
             "thumbnail": item["snippet"]["thumbnails"]["high"]["url"],
             "channel": item["snippet"]["channelTitle"],
-            "description": item["snippet"]["description"]
+            "description": full_descriptions.get(video_id, item["snippet"]["description"])
         })
 
     def keep(video):
         cached = RESULT_CACHE.get(video["id"])
         if cached is not None:
-            return "No ingredients could be confidently extracted" not in cached
-        return description_matches_query(video["description"], query)
+            if "No ingredients could be confidently extracted" in cached:
+                return False
+            return has_ingredient_coverage(cached, query, strict)
+        return description_matches_query(video["description"], query, strict)
 
     with ThreadPoolExecutor(max_workers=32) as executor:
         keep_flags = list(executor.map(keep, candidates))
