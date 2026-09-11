@@ -186,6 +186,8 @@ function App() {
       )}
 
       <footer style={styles.footer}>
+        <a href="/about.html" style={styles.footerLink}>About</a>
+        <span style={styles.footerDivider}>·</span>
         <a href="/privacy.html" style={styles.footerLink}>Privacy Policy</a>
       </footer>
     </div>
@@ -312,6 +314,11 @@ const styles = {
     color: '#8A7A6D',
     fontSize: '0.85rem',
     textDecoration: 'underline',
+  },
+  footerDivider: {
+    color: '#B5A28E',
+    fontSize: '0.85rem',
+    margin: '0 10px',
   },
 };
 
