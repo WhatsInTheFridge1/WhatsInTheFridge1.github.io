@@ -4,6 +4,7 @@ import VideoCard from './components/VideoCard';
 import RecipeDetail from './components/RecipeDetail';
 import IngredientSearch from './components/IngredientSearch';
 import CategoryBrowser from './components/CategoryBrowser';
+import WelcomeModal from './components/WelcomeModal';
 import useIsMobile from './useIsMobile';
 import logo from './WTF.png'; // <-- put WTF.png inside src/ (next to App.js) and import it like this
 
@@ -45,6 +46,13 @@ function App() {
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fridgeIngredients, setFridgeIngredients] = useState([]);
+  const [showWelcome, setShowWelcome] = useState(() => {
+    try {
+      return localStorage.getItem('wtf_hide_welcome') !== 'true';
+    } catch (e) {
+      return true;
+    }
+  });
   const isMobile = useIsMobile();
 
   const addIngredient = (ingredient) => {
@@ -114,7 +122,11 @@ function App() {
         animation: fridgeSwing 0.9s ease-in-out infinite;
         transform-origin: left center;
       }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
     `}</style>
+    {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
     <div style={styles.app}>
       <header style={styles.header}>
         <div style={styles.headerTop}>
@@ -170,7 +182,12 @@ function App() {
         />
       ) : (
         <main style={styles.resultsSection}>
-          {loading && <p style={styles.loading}>Finding recipes...</p>}
+          {loading && (
+            <div style={styles.loadingWrap}>
+              <div style={styles.spinner} />
+              <p style={styles.loadingText}>Finding recipes...</p>
+            </div>
+          )}
           <div style={styles.grid}>
             {videos.map(video => (
               <VideoCard key={video.id} video={video} onClick={() => setSelectedVideo(video)} />
@@ -291,11 +308,26 @@ const styles = {
     gap: '20px',
     marginTop: '20px',
   },
-  loading: {
+  loadingWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '16px',
+    marginTop: '40px',
+  },
+  spinner: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    border: '4px solid #F0E2D0',
+    borderTopColor: '#C9622B',
+    animation: 'spin 0.8s linear infinite',
+  },
+  loadingText: {
     textAlign: 'center',
     fontSize: '1.2rem',
     color: '#6B5D4F',
-    marginTop: '40px',
+    margin: 0,
   },
   empty: {
     textAlign: 'center',
